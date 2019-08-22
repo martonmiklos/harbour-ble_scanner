@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Icon=harbour-ble_scanner
+Categories=Utility;
+Exec=harbour-ble_scanner
+Name=BLE Scanner
+X-Nemo-Single-Instance=no

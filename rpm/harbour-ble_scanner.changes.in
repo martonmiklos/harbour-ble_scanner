@@ -1,0 +1,12 @@
+# Rename this file as harbour-ble_scanner.changes to include changelog
+# entries in your RPM file.
+#
+# Add new changelog entries following the format below.
+# Add newest entries to the top of the list.
+# Separate entries from eachother with a blank line.
+
+# * date Author's Name <author's email> version-release
+# - Summary of changes
+
+* Tue Sep 12 201 Miklos Marton <martonmiklosqdev@gmail.com> 1.0.0-1
+Initial release
