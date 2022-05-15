@@ -40,11 +40,6 @@
 ****************************************************************************/
 
 #include "device.h"
-#include <qbluetoothaddress.h>
-#include <qbluetoothdevicediscoveryagent.h>
-#include <qbluetoothlocaldevice.h>
-#include <qbluetoothdeviceinfo.h>
-#include <qbluetoothservicediscoveryagent.h>
 #include <QDebug>
 #include <QList>
 #include <QTimer>
@@ -54,12 +49,12 @@ Device::Device():
     connected(false), controller(0), m_deviceScanState(false), randomAddress(false)
 {
     //! [les-devicediscovery-1]
-    discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
+    discoveryAgent = new BluetoothDeviceDiscoveryAgent();
     //discoveryAgent->setLowEnergyDiscoveryTimeout(5000);
-    connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
-            this, SLOT(addDevice(const QBluetoothDeviceInfo&)));
-    connect(discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
-            this, SLOT(deviceScanError(QBluetoothDeviceDiscoveryAgent::Error)));
+    connect(discoveryAgent, SIGNAL(deviceDiscovered(const BluetoothDeviceInfo&)),
+            this, SLOT(addDevice(const BluetoothDeviceInfo&)));
+    connect(discoveryAgent, SIGNAL(error(BluetoothDeviceDiscoveryAgent::Error)),
+            this, SLOT(deviceScanError(BluetoothDeviceDiscoveryAgent::Error)));
     connect(discoveryAgent, SIGNAL(finished()), this, SLOT(deviceScanFinished()));
     //! [les-devicediscovery-1]
 
@@ -96,9 +91,9 @@ void Device::startDeviceDiscovery()
 }
 
 //! [les-devicediscovery-3]
-void Device::addDevice(const QBluetoothDeviceInfo &info)
+void Device::addDevice(const BluetoothDeviceInfo &info)
 {
-    if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+    if (info.coreConfigurations() & BluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         DeviceInfo *d = new DeviceInfo(info);
         devices.append(d);
         setUpdate("Last device added: " + d->getName());
@@ -142,8 +137,9 @@ void Device::scanServices(const QString &address)
     // We need the current device for service discovery.
 
     for (int i = 0; i < devices.size(); i++) {
-        if (((DeviceInfo*)devices.at(i))->getAddress() == address )
+        if (((DeviceInfo*)devices.at(i))->getAddress() == address ) {
             currentDevice.setDevice(((DeviceInfo*)devices.at(i))->getDevice());
+        }
     }
 
     if (!currentDevice.getDevice().isValid()) {
@@ -169,33 +165,33 @@ void Device::scanServices(const QString &address)
     //! [les-controller-1]
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
-        controller = new QLowEnergyController(currentDevice.getDevice());
+        controller = new LowEnergyController(currentDevice.getDevice());
         connect(controller, SIGNAL(connected()),
                 this, SLOT(deviceConnected()));
-        connect(controller, SIGNAL(error(QLowEnergyController::Error)),
-                this, SLOT(errorReceived(QLowEnergyController::Error)));
+        connect(controller, SIGNAL(error(LowEnergyController::Error)),
+                this, SLOT(errorReceived(LowEnergyController::Error)));
         connect(controller, SIGNAL(disconnected()),
                 this, SLOT(deviceDisconnected()));
-        connect(controller, SIGNAL(serviceDiscovered(QBluetoothUuid)),
-                this, SLOT(addLowEnergyService(QBluetoothUuid)));
+        connect(controller, SIGNAL(serviceDiscovered(QString)),
+                this, SLOT(addLowEnergyService(QString)));
         connect(controller, SIGNAL(discoveryFinished()),
                 this, SLOT(serviceScanDone()));
     }
 
     if (isRandomAddress())
-        controller->setRemoteAddressType(QLowEnergyController::RandomAddress);
+        controller->setRemoteAddressType(LowEnergyController::RandomAddress);
     else
-        controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
+        controller->setRemoteAddressType(LowEnergyController::PublicAddress);
     controller->connectToDevice();
     //! [les-controller-1]
 
     m_previousAddress = currentDevice.getAddress();
 }
 
-void Device::addLowEnergyService(const QBluetoothUuid &serviceUuid)
+void Device::addLowEnergyService(const QString &serviceUuid)
 {
     //! [les-service-1]
-    QLowEnergyService *service = controller->createServiceObject(serviceUuid);
+    LowEnergyService *service = controller->createServiceObject(serviceUuid);
     if (!service) {
         qWarning() << "Cannot create service for uuid";
         return;
@@ -218,7 +214,7 @@ void Device::serviceScanDone()
 
 void Device::connectToService(const QString &uuid)
 {
-    QLowEnergyService *service = 0;
+    LowEnergyService *service = 0;
     for (int i = 0; i < m_services.size(); i++) {
         ServiceInfo *serviceInfo = (ServiceInfo*)m_services.at(i);
         if (serviceInfo->getUuid() == uuid) {
@@ -234,10 +230,10 @@ void Device::connectToService(const QString &uuid)
     m_characteristics.clear();
     emit characteristicsUpdated();
 
-    if (service->state() == QLowEnergyService::DiscoveryRequired) {
+    if (service->state() == LowEnergyService::DiscoveryRequired) {
         //! [les-service-3]
-        connect(service, SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
-                this, SLOT(serviceDetailsDiscovered(QLowEnergyService::ServiceState)));
+        connect(service, SIGNAL(stateChanged(LowEnergyService::ServiceState)),
+                this, SLOT(serviceDetailsDiscovered(LowEnergyService::ServiceState)));
         service->discoverDetails();
         setUpdate("Back\n(Discovering details...)");
         //! [les-service-3]
@@ -245,8 +241,8 @@ void Device::connectToService(const QString &uuid)
     }
 
     //discovery already done
-    const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-    foreach (const QLowEnergyCharacteristic &ch, chars) {
+    const QList<LowEnergyCharacteristic> chars = service->characteristics();
+    foreach (const LowEnergyCharacteristic &ch, chars) {
         CharacteristicInfo *cInfo = new CharacteristicInfo(ch);
         m_characteristics.append(cInfo);
     }
@@ -263,7 +259,7 @@ void Device::deviceConnected()
     //! [les-service-2]
 }
 
-void Device::errorReceived(QLowEnergyController::Error /*error*/)
+void Device::errorReceived(LowEnergyController::Error /*error*/)
 {
     qWarning() << "Error: " << controller->errorString();
     setUpdate(QString("Back\n(%1)").arg(controller->errorString()));
@@ -282,7 +278,7 @@ void Device::disconnectFromDevice()
     // and thus allowing UI to keep track of controller progress in addition to
     // device scan progress
 
-    if (controller->state() != QLowEnergyController::UnconnectedState)
+    if (controller->state() != LowEnergyController::UnconnectedState)
         controller->disconnectFromDevice();
     else
         deviceDisconnected();
@@ -294,29 +290,29 @@ void Device::deviceDisconnected()
     emit disconnected();
 }
 
-void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
+void Device::serviceDetailsDiscovered(LowEnergyService::ServiceState newState)
 {
-    if (newState != QLowEnergyService::ServiceDiscovered) {
+    if (newState != LowEnergyService::ServiceDiscovered) {
         // do not hang in "Scanning for characteristics" mode forever
         // in case the service discovery failed
         // We have to queue the signal up to give UI time to even enter
         // the above mode
-        if (newState != QLowEnergyService::DiscoveringServices) {
+        if (newState != LowEnergyService::DiscoveringServices) {
             QMetaObject::invokeMethod(this, "characteristicsUpdated",
                                       Qt::QueuedConnection);
         }
         return;
     }
 
-    QLowEnergyService *service = qobject_cast<QLowEnergyService *>(sender());
+    LowEnergyService *service = qobject_cast<LowEnergyService *>(sender());
     if (!service)
         return;
 
 
 
     //! [les-chars]
-    const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-    foreach (const QLowEnergyCharacteristic &ch, chars) {
+    const QList<LowEnergyCharacteristic> chars = service->characteristics();
+    foreach (const LowEnergyCharacteristic &ch, chars) {
         CharacteristicInfo *cInfo = new CharacteristicInfo(ch);
         m_characteristics.append(cInfo);
     }
@@ -325,11 +321,11 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
     emit characteristicsUpdated();
 }
 
-void Device::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
+void Device::deviceScanError(BluetoothDeviceDiscoveryAgent::Error error)
 {
-    if (error == QBluetoothDeviceDiscoveryAgent::PoweredOffError)
+    if (error == BluetoothDeviceDiscoveryAgent::PoweredOffError)
         setUpdate("The Bluetooth adaptor is powered off, power it on before doing discovery.");
-    else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
+    else if (error == BluetoothDeviceDiscoveryAgent::InputOutputError)
         setUpdate("Writing or reading from the device resulted in an error.");
     else
         setUpdate("An unknown error has occurred.");
@@ -346,7 +342,7 @@ bool Device::state()
 
 bool Device::hasControllerError() const
 {
-    if (controller && controller->error() != QLowEnergyController::NoError)
+    if (controller && controller->error() != LowEnergyController::NoError)
         return true;
     return false;
 }

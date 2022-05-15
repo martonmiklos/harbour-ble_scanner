@@ -1,12 +1,7 @@
 /***************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2022 David Llewellyn-Jones.
 **
-** This file is part of the QtBluetooth module of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
@@ -35,35 +30,71 @@
 ** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
 **
-** $QT_END_LICENSE$
-**
 ****************************************************************************/
 
-#ifndef DEVICEINFO_H
-#define DEVICEINFO_H
+#ifndef BLUETOOTHDEVICEDISCOVERYAGENT_H
+#define BLUETOOTHDEVICEDISCOVERYAGENT_H
 
 #include <QObject>
+#include <QDBusInterface>
+#include <QDBusPendingCallWatcher>
+#include <QTimer>
 #include <QList>
-#include "bluez/bluetoothdeviceinfo.h"
+#include <QDBusArgument>
+#include "bluetoothdeviceinfo.h"
 
-class DeviceInfo: public QObject
+typedef QMap<QString, QVariantMap> ObjectStuff;
+Q_DECLARE_METATYPE(ObjectStuff)
+
+typedef QMap<QDBusObjectPath, ObjectStuff> DeviceInterface;
+Q_DECLARE_METATYPE(DeviceInterface)
+
+class BluetoothDeviceDiscoveryAgent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
-    Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
-public:
-    DeviceInfo();
-    DeviceInfo(const BluetoothDeviceInfo &d);
-    QString getAddress() const;
-    QString getName() const;
-    BluetoothDeviceInfo getDevice();
-    void setDevice(const BluetoothDeviceInfo &dev);
 
-Q_SIGNALS:
-    void deviceChanged();
+public:
+    enum Error {
+        NoError,
+        InputOutputError,
+        PoweredOffError,
+        UnknownError = 100
+    };
+    Q_ENUM(Error)
+
+    enum ScanState {
+        Inactive,
+        ApplyingFilter,
+        StartingDiscovery,
+        Active,
+        StoppingDiscovery,
+        RemovingFilter,
+    };
+    Q_ENUM(ScanState)
+
+    explicit BluetoothDeviceDiscoveryAgent(QObject *parent = nullptr);
+    ~BluetoothDeviceDiscoveryAgent();
+
+    void start();
+    void stop();
+    bool isActive() const;
+
+signals:
+    void deviceDiscovered(const BluetoothDeviceInfo &info);
+    void error(BluetoothDeviceDiscoveryAgent::Error error);
+    void finished();
+
+public slots:
+    void onInterfaceAdded(QDBusObjectPath path, ObjectStuff interfaces_and_properties);
 
 private:
-    BluetoothDeviceInfo device;
+    void dbusError(QDBusError error);
+    void continueScan();
+
+private:
+    QDBusInterface *m_adapterInterface;
+    ScanState m_scanState;
+    QTimer m_timer;
 };
 
-#endif // DEVICEINFO_H
+#endif // BLUETOOTHDEVICEDISCOVERYAGENT_H

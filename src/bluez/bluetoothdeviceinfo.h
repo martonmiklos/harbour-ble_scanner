@@ -1,12 +1,7 @@
 /***************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2022 David Llewellyn-Jones.
 **
-** This file is part of the QtBluetooth module of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
@@ -35,35 +30,47 @@
 ** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
 **
-** $QT_END_LICENSE$
-**
 ****************************************************************************/
 
-#ifndef DEVICEINFO_H
-#define DEVICEINFO_H
+#ifndef BLUETOOTHDEVICEINFO_H
+#define BLUETOOTHDEVICEINFO_H
 
-#include <QObject>
-#include <QList>
-#include "bluez/bluetoothdeviceinfo.h"
+#include <QString>
+#include <QFlags>
+#include <QVariantMap>
 
-class DeviceInfo: public QObject
+class BluetoothDeviceInfo
 {
-    Q_OBJECT
-    Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
-    Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
 public:
-    DeviceInfo();
-    DeviceInfo(const BluetoothDeviceInfo &d);
-    QString getAddress() const;
-    QString getName() const;
-    BluetoothDeviceInfo getDevice();
-    void setDevice(const BluetoothDeviceInfo &dev);
+    enum CoreConfiguration {
+        UnknownCoreConfiguration = 0x00,
+        LowEnergyCoreConfiguration = 0x01,
+        BaseRateCoreConfiguration = 0x02,
+        BaseRateAndLowEnergyCoreConfiguration = 0x03
+    };
 
-Q_SIGNALS:
-    void deviceChanged();
+    typedef QFlags<CoreConfiguration> CoreConfigurations;
+
+    explicit BluetoothDeviceInfo();
+    explicit BluetoothDeviceInfo(const QString &address, const QString &name, quint32 classOfDevice);
+
+    CoreConfigurations coreConfigurations() const;
+    void setCoreConfigurations(CoreConfigurations coreConfigs);
+    QString address() const;
+    QString name() const;
+    bool isValid() const;
+    void setDBusPath(const QString &path);
+    QString dBusPath() const;
+    void setSerices(const QStringList &services);
+    QStringList services() const;
 
 private:
-    BluetoothDeviceInfo device;
+    QString m_address;
+    QString m_name;
+    quint32 m_classOfDevice;
+    CoreConfigurations m_coreConfigs;
+    QString m_path;
+    QStringList m_services;
 };
 
-#endif // DEVICEINFO_H
+#endif // BLUETOOTHDEVICEINFO_H

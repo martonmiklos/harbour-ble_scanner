@@ -32,7 +32,13 @@
 #include <QtQuick>
 #endif
 
+#include <QGuiApplication>
+#include <QLoggingCategory>
+#include <QQuickView>
+#include <QQmlEngine>
+#include <QQmlContext>
 #include <sailfishapp.h>
+
 
 #include "device.h"
 
