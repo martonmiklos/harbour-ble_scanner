@@ -40,19 +40,20 @@
 ****************************************************************************/
 
 #include "characteristicinfo.h"
-#include "qbluetoothuuid.h"
 #include <QByteArray>
+
+#include <QtBluetooth/QLowEnergyDescriptor>
 
 CharacteristicInfo::CharacteristicInfo()
 {
 }
 
-CharacteristicInfo::CharacteristicInfo(const QLowEnergyCharacteristic &characteristic):
+CharacteristicInfo::CharacteristicInfo(const LowEnergyCharacteristic &characteristic):
     m_characteristic(characteristic)
 {
 }
 
-void CharacteristicInfo::setCharacteristic(const QLowEnergyCharacteristic &characteristic)
+void CharacteristicInfo::setCharacteristic(const LowEnergyCharacteristic &characteristic)
 {
     m_characteristic = characteristic;
     emit characteristicChanged();
@@ -66,8 +67,8 @@ QString CharacteristicInfo::getName() const
         return name;
 
     // find descriptor with CharacteristicUserDescription
-    foreach (const QLowEnergyDescriptor &descriptor, m_characteristic.descriptors()) {
-        if (descriptor.type() == QBluetoothUuid::CharacteristicUserDescription) {
+    foreach (const LowEnergyDescriptor &descriptor, m_characteristic.descriptors()) {
+        if (descriptor.uuid().left(8) == QStringLiteral("00002901")) {
             name = descriptor.value();
             break;
         }
@@ -82,17 +83,7 @@ QString CharacteristicInfo::getName() const
 
 QString CharacteristicInfo::getUuid() const
 {
-    const QBluetoothUuid uuid = m_characteristic.uuid();
-    bool success = false;
-    quint16 result16 = uuid.toUInt16(&success);
-    if (success)
-        return QStringLiteral("0x") + QString::number(result16, 16);
-
-    quint32 result32 = uuid.toUInt32(&success);
-    if (success)
-        return QStringLiteral("0x") + QString::number(result32, 16);
-
-    return uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+    return m_characteristic.uuid();
 }
 
 QString CharacteristicInfo::getValue() const
@@ -121,27 +112,27 @@ QString CharacteristicInfo::getPermission() const
 {
     QString properties = "( ";
     int permission = m_characteristic.properties();
-    if (permission & QLowEnergyCharacteristic::Read)
+    if (permission & LowEnergyCharacteristic::Read)
         properties += QStringLiteral(" Read");
-    if (permission & QLowEnergyCharacteristic::Write)
+    if (permission & LowEnergyCharacteristic::Write)
         properties += QStringLiteral(" Write");
-    if (permission & QLowEnergyCharacteristic::Notify)
+    if (permission & LowEnergyCharacteristic::Notify)
         properties += QStringLiteral(" Notify");
-    if (permission & QLowEnergyCharacteristic::Indicate)
+    if (permission & LowEnergyCharacteristic::Indicate)
         properties += QStringLiteral(" Indicate");
-    if (permission & QLowEnergyCharacteristic::ExtendedProperty)
+    if (permission & LowEnergyCharacteristic::ExtendedProperty)
         properties += QStringLiteral(" ExtendedProperty");
-    if (permission & QLowEnergyCharacteristic::Broadcasting)
+    if (permission & LowEnergyCharacteristic::Broadcasting)
         properties += QStringLiteral(" Broadcast");
-    if (permission & QLowEnergyCharacteristic::WriteNoResponse)
+    if (permission & LowEnergyCharacteristic::WriteNoResponse)
         properties += QStringLiteral(" WriteNoResp");
-    if (permission & QLowEnergyCharacteristic::WriteSigned)
+    if (permission & LowEnergyCharacteristic::WriteSigned)
         properties += QStringLiteral(" WriteSigned");
     properties += " )";
     return properties;
 }
 
-QLowEnergyCharacteristic CharacteristicInfo::getCharacteristic() const
+LowEnergyCharacteristic CharacteristicInfo::getCharacteristic() const
 {
     return m_characteristic;
 }

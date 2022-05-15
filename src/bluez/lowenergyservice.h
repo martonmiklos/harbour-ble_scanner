@@ -1,12 +1,7 @@
 /***************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2022 David Llewellyn-Jones.
 **
-** This file is part of the QtBluetooth module of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
@@ -35,35 +30,57 @@
 ** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
 **
-** $QT_END_LICENSE$
-**
 ****************************************************************************/
 
-#ifndef DEVICEINFO_H
-#define DEVICEINFO_H
+#ifndef LOWENERGYSERVICE_H
+#define LOWENERGYSERVICE_H
 
 #include <QObject>
-#include <QList>
-#include "bluez/bluetoothdeviceinfo.h"
+#include "lowenergycharacteristic.h"
 
-class DeviceInfo: public QObject
+class LowEnergyService : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
-    Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
 public:
-    DeviceInfo();
-    DeviceInfo(const BluetoothDeviceInfo &d);
-    QString getAddress() const;
-    QString getName() const;
-    BluetoothDeviceInfo getDevice();
-    void setDevice(const BluetoothDeviceInfo &dev);
+    enum ServiceType {
+        PrimaryService = 0x0001,
+        IncludedService = 0x0002
+    };
+    Q_ENUM(ServiceType)
 
-Q_SIGNALS:
-    void deviceChanged();
+    enum ServiceState {
+        InvalidService = 0,
+        DiscoveryRequired,
+        DiscoveringServices,
+        ServiceDiscovered
+    };
+    Q_ENUM(ServiceState)
+
+    explicit LowEnergyService(QString const &uuid, QString const &path, QString const &name, ServiceType type, QList<LowEnergyCharacteristic> characteristics, QObject *parent = nullptr);
+
+    QString serviceName() const;
+    ServiceType type() const;
+    QString serviceUuid() const;
+
+    void discoverDetails();
+    ServiceState state() const;
+    QList<LowEnergyCharacteristic> characteristics() const;
+
+signals:
+    void stateChanged(LowEnergyService::ServiceState newState);
 
 private:
-    BluetoothDeviceInfo device;
+    void readCharacteristicValue(LowEnergyCharacteristic const &characteristic);
+    void readDescriptorValue(LowEnergyDescriptor const &descriptor);
+
+private:
+    QString m_uuid;
+    QString m_path;
+    QString m_name;
+    ServiceType m_type;
+    QList<LowEnergyCharacteristic> m_characteristics;
+    ServiceState m_state;
+    qint32 m_discoveryCount;
 };
 
-#endif // DEVICEINFO_H
+#endif // LOWENERGYSERVICE_H

@@ -12,7 +12,7 @@
 # The name of your application
 TARGET = harbour-ble_scanner
 
-QT += bluetooth dbus
+QT += dbus
 
 OBJECTS_DIR = build
 MOC_DIR = build
@@ -27,7 +27,13 @@ SOURCES += src/ble_scanner.cpp \
     src/device.cpp \
     src/characteristicinfo.cpp \
     src/serviceinfo.cpp \
-    src/deviceinfo.cpp
+    src/deviceinfo.cpp \
+    src/bluez/bluetoothdevicediscoveryagent.cpp \
+    src/bluez/bluetoothdeviceinfo.cpp \
+    src/bluez/lowenergycharacteristic.cpp \
+    src/bluez/lowenergycontroller.cpp \
+    src/bluez/lowenergydescriptor.cpp \
+    src/bluez/lowenergyservice.cpp
 
 OTHER_FILES += qml/ble_scanner.qml \
     qml/cover/CoverPage.qml \
@@ -50,7 +56,13 @@ HEADERS += \
     src/device.h \
     src/characteristicinfo.h \
     src/deviceinfo.h \
-    src/serviceinfo.h
+    src/serviceinfo.h \
+    src/bluez/bluetoothdevicediscoveryagent.h \
+    src/bluez/bluetoothdeviceinfo.h \
+    src/bluez/lowenergycharacteristic.h \
+    src/bluez/lowenergycontroller.h \
+    src/bluez/lowenergydescriptor.h \
+    src/bluez/lowenergyservice.h
 
 DISTFILES += \
     qml/pages/DevicesPage.qml \

@@ -43,7 +43,7 @@
 #define CHARACTERISTICINFO_H
 #include <QObject>
 #include <QString>
-#include <QtBluetooth/QLowEnergyCharacteristic>
+#include "bluez/lowenergycharacteristic.h"
 
 class CharacteristicInfo: public QObject
 {
@@ -56,20 +56,20 @@ class CharacteristicInfo: public QObject
 
 public:
     CharacteristicInfo();
-    CharacteristicInfo(const QLowEnergyCharacteristic &characteristic);
-    void setCharacteristic(const QLowEnergyCharacteristic &characteristic);
+    CharacteristicInfo(const LowEnergyCharacteristic &characteristic);
+    void setCharacteristic(const LowEnergyCharacteristic &characteristic);
     QString getName() const;
     QString getUuid() const;
     QString getValue() const;
     QString getHandle() const;
     QString getPermission() const;
-    QLowEnergyCharacteristic getCharacteristic() const;
+    LowEnergyCharacteristic getCharacteristic() const;
 
 Q_SIGNALS:
     void characteristicChanged();
 
 private:
-    QLowEnergyCharacteristic m_characteristic;
+    LowEnergyCharacteristic m_characteristic;
 };
 
 #endif // CHARACTERISTICINFO_H

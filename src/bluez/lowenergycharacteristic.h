@@ -1,12 +1,7 @@
 /***************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2022 David Llewellyn-Jones.
 **
-** This file is part of the QtBluetooth module of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
@@ -35,35 +30,59 @@
 ** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
 **
-** $QT_END_LICENSE$
-**
 ****************************************************************************/
 
-#ifndef DEVICEINFO_H
-#define DEVICEINFO_H
+#ifndef LOWENERGYCHARACTERISTIC_H
+#define LOWENERGYCHARACTERISTIC_H
 
-#include <QObject>
+#include <QString>
 #include <QList>
-#include "bluez/bluetoothdeviceinfo.h"
+#include "lowenergydescriptor.h"
 
-class DeviceInfo: public QObject
+class LowEnergyCharacteristic
 {
-    Q_OBJECT
-    Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
-    Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
 public:
-    DeviceInfo();
-    DeviceInfo(const BluetoothDeviceInfo &d);
-    QString getAddress() const;
-    QString getName() const;
-    BluetoothDeviceInfo getDevice();
-    void setDevice(const BluetoothDeviceInfo &dev);
+    enum PropertyType {
+        Unknown = 0x00,
+        Broadcasting = 0x01,
+        Read = 0x02,
+        WriteNoResponse = 0x04,
+        Write = 0x08,
+        Notify = 0x10,
+        Indicate = 0x20,
+        WriteSigned = 0x40,
+        ExtendedProperty = 0x80
+    };
+    Q_DECLARE_FLAGS(PropertyTypes, PropertyType)
 
-Q_SIGNALS:
-    void deviceChanged();
+    LowEnergyCharacteristic();
+
+    QString path() const;
+    QString name() const;
+    QString uuid() const;
+    QByteArray value() const;
+    quint16 handle() const;
+    PropertyTypes properties() const;
+    QList<LowEnergyDescriptor> descriptors() const;
+
+
+    void setPath(QString const &path);
+    void setName(QString const &name);
+    void setUuid(QString const &uuid);
+    void setValue(QByteArray const &value);
+    void setHandle(quint16 handle);
+    void setProperties(PropertyTypes properties);
+    void setProperties(QStringList const &properties);
+    void setDescriptors(QList<LowEnergyDescriptor> const &descriptors);
 
 private:
-    BluetoothDeviceInfo device;
+    QString m_path;
+    QString m_name;
+    QString m_uuid;
+    QByteArray m_value;
+    quint16 m_handle;
+    PropertyTypes m_properties;
+    QList<LowEnergyDescriptor> m_descriptors;
 };
 
-#endif // DEVICEINFO_H
+#endif // LOWENERGYCHARACTERISTIC_H

@@ -41,18 +41,14 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
-#include <qbluetoothglobal.h>
-#include <qbluetoothlocaldevice.h>
 #include <QObject>
 #include <QVariant>
 #include <QList>
-#include <QBluetoothServiceDiscoveryAgent>
-#include <QBluetoothDeviceDiscoveryAgent>
-#include <QLowEnergyController>
-#include <QBluetoothServiceInfo>
 #include "deviceinfo.h"
 #include "serviceinfo.h"
 #include "characteristicinfo.h"
+#include "bluez/bluetoothdevicediscoveryagent.h"
+#include "bluez/lowenergycontroller.h"
 
 QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS (QBluetoothServiceInfo)
@@ -89,19 +85,19 @@ public slots:
 
 private slots:
     // QBluetoothDeviceDiscoveryAgent related
-    void addDevice(const QBluetoothDeviceInfo&);
+    void addDevice(const BluetoothDeviceInfo&);
     void deviceScanFinished();
-    void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
+    void deviceScanError(BluetoothDeviceDiscoveryAgent::Error);
 
     // QLowEnergyController realted
-    void addLowEnergyService(const QBluetoothUuid &uuid);
+    void addLowEnergyService(const QString &uuid);
     void deviceConnected();
-    void errorReceived(QLowEnergyController::Error);
+    void errorReceived(LowEnergyController::Error);
     void serviceScanDone();
     void deviceDisconnected();
 
     // QLowEnergyService related
-    void serviceDetailsDiscovered(QLowEnergyService::ServiceState newState);
+    void serviceDetailsDiscovered(LowEnergyService::ServiceState newState);
 
 Q_SIGNALS:
     void devicesUpdated();
@@ -114,7 +110,7 @@ Q_SIGNALS:
 
 private:
     void setUpdate(QString message);
-    QBluetoothDeviceDiscoveryAgent *discoveryAgent;
+    BluetoothDeviceDiscoveryAgent *discoveryAgent;
     DeviceInfo currentDevice;
     QList<QObject*> devices;
     QList<QObject*> m_services;
@@ -122,7 +118,7 @@ private:
     QString m_previousAddress;
     QString m_message;
     bool connected;
-    QLowEnergyController *controller;
+    LowEnergyController *controller;
     bool m_deviceScanState;
     bool randomAddress;
 };

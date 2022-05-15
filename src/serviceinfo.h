@@ -42,6 +42,7 @@
 #ifndef SERVICEINFO_H
 #define SERVICEINFO_H
 #include <QtBluetooth/QLowEnergyService>
+#include "bluez/lowenergyservice.h"
 
 class ServiceInfo: public QObject
 {
@@ -51,8 +52,8 @@ class ServiceInfo: public QObject
     Q_PROPERTY(QString serviceType READ getType NOTIFY serviceChanged)
 public:
     ServiceInfo();
-    ServiceInfo(QLowEnergyService *service);
-    QLowEnergyService *service() const;
+    ServiceInfo(LowEnergyService *service);
+    LowEnergyService *service() const;
     QString getUuid() const;
     QString getName() const;
     QString getType() const;
@@ -61,7 +62,7 @@ Q_SIGNALS:
     void serviceChanged();
 
 private:
-    QLowEnergyService *m_service;
+    LowEnergyService *m_service;
 };
 
 #endif // SERVICEINFO_H
